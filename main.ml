@@ -4,6 +4,7 @@ type expression =
   | Var of string
   | Sum of expression * expression
   | Product of expression * expression
+  | Fract of expression * expression
   | Power of expression * int
 
   | Exp of expression
@@ -24,6 +25,10 @@ let simplify = function
   | Product (Int a, Float b) -> Float ((Float.of_int a) *. b)
   | Product (Float a, Int b) -> Float ((Float.of_int b) *. a)
 
+  | Fract (Float a, Float b) -> Float (a /. b)
+  | Fract (Float a, Int b) -> Float (a /. (Float.of_int b))
+  | Fract (Int a, Float b) -> Float ((Float.of_int a) /. b)
+
   | Power (Int a, b) -> Int (Int.of_float(Float.of_int(a) ** Float.of_int(b)))
   | Power (Float a, b) -> Float (a ** Float.of_int(b))
 
@@ -43,11 +48,12 @@ let rec derivative var = function
   | Var v -> if v = var then Int 1 else Int 0
   | Sum (a, b) -> Sum (derivative var a, derivative var b)
   | Product (a, b) -> Sum (Product (derivative var a, b), Product (a, derivative var b))
+  | Fract (a, b) -> Fract (Product (derivative var a, b), Product (a, derivative var b))
   | Power (e, b) -> Product (Product (Int b, (Product (Int 1, Int 2))), derivative var e)
 
   | Exp a -> Product (Exp a, derivative var a)
-  | Ln a -> Product (Power (a, -1), derivative var a)
+  | Ln a -> Product (Fract (Int 1, a), derivative var a)
   | Sin a -> Product (Cos a, derivative var a)
   | Cos a -> Product (Product (Int (-1), Sin a), derivative var a)
-  | Arctan a -> Product (Power (Sum (Int 1, Power (a, 2)), -1), derivative var a)
+  | Arctan a -> Product (Fract (Int 1, Sum (Int 1, Power (a, 2))), derivative var a)
 ;;
