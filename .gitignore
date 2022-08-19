@@ -3,3 +3,4 @@
 *.o
 .vscode
 _build
+.DS_Store
