@@ -10,6 +10,8 @@ let simplify = function
   | Mult (Float a, Float b) -> Float (a *. b)
   | Mult (Int a, Float b) -> Float ((Float.of_int a) *. b)
   | Mult (Float a, Int b) -> Float ((Float.of_int b) *. a)
+  | Mult (Int 0, _) -> Int 0
+  | Mult (_, Int 0) -> Int 0
 
   | Fract (Float a, Float b) -> Float (a /. b)
   | Fract (Float a, Int b) -> Float (a /. (Float.of_int b))
@@ -42,5 +44,6 @@ let rec derivative var = function
   | Ln a -> Mult (Fract (Int 1, a), derivative var a)
   | Sin a -> Mult (Cos a, derivative var a)
   | Cos a -> Mult (Sub (Int 0, Sin a), derivative var a)
+  | Tan a -> Mult (Fract (Int 1, Power (Cos a, 2)), derivative var a)
   | Arctan a -> Mult (Fract (Int 1, Add (Int 1, Power (a, 2))), derivative var a)
 ;;

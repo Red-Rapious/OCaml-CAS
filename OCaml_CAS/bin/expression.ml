@@ -12,5 +12,6 @@ type expression =
   | Ln of expression
   | Sin of expression
   | Cos of expression
+  | Tan of expression
   | Arctan of expression
 ;;
