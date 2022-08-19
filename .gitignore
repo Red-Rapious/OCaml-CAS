@@ -2,3 +2,4 @@
 *.cmx
 *.o
 .vscode
+_build

@@ -1,0 +1,4 @@
+(executable
+ (public_name OCaml_CAS)
+ (name main)
+ (libraries OCaml_CAS))
