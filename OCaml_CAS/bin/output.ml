@@ -15,5 +15,4 @@ let rec print_expression = function
   | Cos a -> print_string "cos(" ; print_expression a ; print_string ")"
   | Tan a -> print_string "tan(" ; print_expression a ; print_string ")"
   | Arctan a -> print_string "atan(" ; print_expression a ; print_string ")"
-
 ;;

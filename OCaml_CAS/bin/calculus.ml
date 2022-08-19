@@ -5,17 +5,25 @@ let rec simplify = function
   | Add (Float a, Float b) -> Float (a +. b)
   | Add (Int a, Float b) -> Float ((Float.of_int a) +. b)
   | Add (Float a, Int b) -> Float ((Float.of_int b) +. a)
+
   | Add (Int 0, a) -> simplify a
   | Add (a, Int 0) -> simplify a
+  | Add (Float 0.0, a) -> simplify a
+  | Add (a, Float 0.0) -> simplify a
 
   | Mult (Int a, Int b) -> Int (a * b)
   | Mult (Float a, Float b) -> Float (a *. b)
   | Mult (Int a, Float b) -> Float ((Float.of_int a) *. b)
   | Mult (Float a, Int b) -> Float ((Float.of_int b) *. a)
+
   | Mult (Int 0, _) -> Int 0
   | Mult (_, Int 0) -> Int 0
+  | Mult (Float 0.0, _) -> Int 0
+  | Mult (_, Float 0.0) -> Int 0
   | Mult (Int 1, a) -> simplify a
   | Mult (a, Int 1) -> simplify a
+  | Mult (Float 1.0, a) -> simplify a
+  | Mult (a, Float 1.0) -> simplify a
 
   | Fract (Float a, Float b) -> Float (a /. b)
   | Fract (Float a, Int b) -> Float (a /. (Float.of_int b))
@@ -66,4 +74,11 @@ let rec derivative var = function
   | Cos a -> Mult (Sub (Int 0, Sin a), derivative var a)
   | Tan a -> Mult (Fract (Int 1, Power (Cos a, 2)), derivative var a)
   | Arctan a -> Mult (Fract (Int 1, Add (Int 1, Power (a, 2))), derivative var a)
+;;
+
+(* GENIUS SHIT *)
+let rec simplify2 = function
+  | Add (a, b) -> let a, b = simplify2 a, simplify2 b in match a, b with
+      | Int 0, _ -> b
+      | _, Int 0 -> a
 ;;
