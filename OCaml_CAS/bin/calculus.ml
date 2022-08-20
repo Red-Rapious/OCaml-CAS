@@ -87,6 +87,21 @@ let rec simplify e =
     | Float x, Float y -> Float (x +. y)
     | Int x, Float y -> Float ((Float.of_int x) +. y)
     | Float x, Int y -> Float (x +. (Float.of_int y))
+    | Power (Sin a, 2), Power (Cos b, 2) -> if a = b then Int 1 else Add (Power (Sin a, 2), Power (Cos b, 2))
+    | Ln a, Ln b -> Ln(Mult(simplify_old a, simplify_old b))
+
+    | x, y -> Add (x, y)
+  in
+  let simplify_sub a b = 
+    let a, b = simplify a, simplify b in match a, b with
+    | x, Int 0 -> x
+    | x, Float 0.0 -> x
+    | Int x, Int y -> Int (x - y)
+    | Float x, Float y -> Float (x -. y)
+    | Int x, Float y -> Float ((Float.of_int x) -. y)
+    | Float x, Int y -> Float (x -. (Float.of_int y))
+    | Ln a, Ln b -> Ln(Fract(simplify_old a, simplify_old b))
+
     | x, y -> Add (x, y)
   in
   let simplify_mult x y = 
@@ -104,6 +119,7 @@ let rec simplify e =
     | Float 1.0, a -> a
     | a, Float 1.0 -> a
     | Exp a, Exp b -> Exp(Add(a, b))
+
     | a, b -> Mult (a, b)
   in
   let simplify_fract x y =
@@ -112,11 +128,50 @@ let rec simplify e =
     | Float a, Float b -> Float (a /. b)
     | Float a, Int b -> Float (a /. (Float.of_int b))
     | Int a, Float b -> Float ((Float.of_int a) /. b)
+    | Exp a, Exp b -> Exp(Sub(a, b))
+
     | a, b -> Fract (a, b)
+  in
+  let simplify_power x y =
+    let x = simplify x in match x, y with
+    | Int a, b -> Int (Int.of_float(Float.of_int(a) ** Float.of_int(b)))
+    | Float a, b -> Float (a ** Float.of_int(b))
+
+    | a, b -> Power (a, b)
+  in
+  let simplify_ln x =
+    let x = simplify x in match x with
+    | Exp a ->  a
+    | Int 1 -> Int 0
+
+    | a -> Ln (a)
+  in
+  let simplify_exp x =
+    let x = simplify x in match x with
+    | Ln a -> a
+    | Int 0 -> Int 1
+
+    | a -> Exp (a)
+  in
+  let simplify_tan x =
+    let x = simplify x in match x with
+    | Arctan a -> a
+    | a -> Tan (a)
   in
   match e with
   | Add (a, b) -> simplify_add a b
+  | Sub (a, b) -> simplify_sub a b
   | Mult (a, b) -> simplify_mult a b
   | Fract (a, b) -> simplify_fract a b
-  | a -> a
+  | Power (a, b) -> simplify_power a b
+  | Ln a -> simplify_ln a
+  | Exp a -> simplify_exp a
+  | Tan a -> simplify_tan a
+
+  | Int a -> Int a
+  | Float a -> Float a
+  | Var a -> Var a
+  | Sin a -> Sin (simplify a)
+  | Cos a -> Cos (simplify a)
+  | Arctan a -> Arctan (simplify a)
 ;;
