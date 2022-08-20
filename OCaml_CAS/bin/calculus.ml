@@ -1,63 +1,5 @@
 open Expression
 
-let rec simplify_old = function
-  | Add (Int a, Int b) -> Int (a + b)
-  | Add (Float a, Float b) -> Float (a +. b)
-  | Add (Int a, Float b) -> Float ((Float.of_int a) +. b)
-  | Add (Float a, Int b) -> Float ((Float.of_int b) +. a)
-
-  | Add (Int 0, a) -> simplify_old a
-  | Add (a, Int 0) -> simplify_old a
-  | Add (Float 0.0, a) -> simplify_old a
-  | Add (a, Float 0.0) -> simplify_old a
-
-  | Mult (Int a, Int b) -> Int (a * b)
-  | Mult (Float a, Float b) -> Float (a *. b)
-  | Mult (Int a, Float b) -> Float ((Float.of_int a) *. b)
-  | Mult (Float a, Int b) -> Float ((Float.of_int b) *. a)
-
-  | Mult (Int 0, _) -> Int 0
-  | Mult (_, Int 0) -> Int 0
-  | Mult (Float 0.0, _) -> Int 0
-  | Mult (_, Float 0.0) -> Int 0
-  | Mult (Int 1, a) -> simplify_old a
-  | Mult (a, Int 1) -> simplify_old a
-  | Mult (Float 1.0, a) -> simplify_old a
-  | Mult (a, Float 1.0) -> simplify_old a
-
-  | Fract (Float a, Float b) -> Float (a /. b)
-  | Fract (Float a, Int b) -> Float (a /. (Float.of_int b))
-  | Fract (Int a, Float b) -> Float ((Float.of_int a) /. b)
-  | Fract (Int 0, _) -> Int 0
-
-  | Power (Int a, b) -> Int (Int.of_float(Float.of_int(a) ** Float.of_int(b)))
-  | Power (Float a, b) -> Float (a ** Float.of_int(b))
-
-  | Ln (Exp a) -> simplify_old a
-  | Exp (Ln a) -> simplify_old a
-  | Mult (Exp a, Exp b) -> Exp(Add(simplify_old a, simplify_old b))
-  | Add (Ln a, Ln b) -> Ln(Mult(simplify_old a, simplify_old b))
-
-  | Add (Power (Sin a, 2), Power (Cos b, 2)) -> if a = b then Int 1 else Add (Power (Sin a, 2), Power (Cos b, 2))
-  | Tan (Arctan a) -> simplify_old a
-
-  | Add (a, b) -> Add (simplify_old a, simplify_old b)
-  | Sub (a, b) -> Sub (simplify_old a, simplify_old b)
-  | Mult (a, b) -> Mult (simplify_old a, simplify_old b)
-  | Fract (a, b) -> Fract (simplify_old a, simplify_old b)
-  | Power (a, b) -> Power (simplify_old a, b)
-  | Ln a -> Ln (simplify_old a)
-  | Exp a -> Exp (simplify_old a)
-  | Sin a -> Sin (simplify_old a)
-  | Cos a -> Cos (simplify_old a)
-  | Arctan a -> Arctan (simplify_old a)
-  | Tan a -> Tan (simplify_old a)
-  | Int a -> Int a
-  | Float a -> Float a
-  | Var a -> Var a
-
-;;
-
 let rec derivative var = function
   | Int _ -> Int 0
   | Float _ -> Int 0
@@ -88,7 +30,7 @@ let rec simplify e =
     | Int x, Float y -> Float ((Float.of_int x) +. y)
     | Float x, Int y -> Float (x +. (Float.of_int y))
     | Power (Sin a, 2), Power (Cos b, 2) -> if a = b then Int 1 else Add (Power (Sin a, 2), Power (Cos b, 2))
-    | Ln a, Ln b -> Ln(Mult(simplify_old a, simplify_old b))
+    | Ln a, Ln b -> Ln(Mult(simplify a, simplify b))
 
     | x, y -> Add (x, y)
   in
@@ -100,7 +42,7 @@ let rec simplify e =
     | Float x, Float y -> Float (x -. y)
     | Int x, Float y -> Float ((Float.of_int x) -. y)
     | Float x, Int y -> Float (x -. (Float.of_int y))
-    | Ln a, Ln b -> Ln(Fract(simplify_old a, simplify_old b))
+    | Ln a, Ln b -> Ln(Fract(simplify a, simplify b))
 
     | x, y -> Add (x, y)
   in
@@ -136,6 +78,7 @@ let rec simplify e =
     let x = simplify x in match x, y with
     | Int a, b -> Int (Int.of_float(Float.of_int(a) ** Float.of_int(b)))
     | Float a, b -> Float (a ** Float.of_int(b))
+    | _, 0 -> Int 1
 
     | a, b -> Power (a, b)
   in
@@ -156,7 +99,27 @@ let rec simplify e =
   let simplify_tan x =
     let x = simplify x in match x with
     | Arctan a -> a
+    | Int 0 -> Int 0
+
     | a -> Tan (a)
+  in
+  let simplify_arctan x =
+    let x = simplify x in match x with
+    | Int 0 -> Int 0
+
+    | a -> Arctan (a)
+  in
+  let simplify_sin x =
+    let x = simplify x in match x with
+    | Int 0 -> Int 0
+
+    | a -> Sin (a)
+  in
+  let simplify_cos x =
+    let x = simplify x in match x with
+    | Int 0 -> Int 1
+
+    | a -> Cos (a)
   in
   match e with
   | Add (a, b) -> simplify_add a b
@@ -167,11 +130,11 @@ let rec simplify e =
   | Ln a -> simplify_ln a
   | Exp a -> simplify_exp a
   | Tan a -> simplify_tan a
+  | Arctan a -> simplify_arctan a
+  | Sin a -> simplify_sin a
+  | Cos a -> simplify_cos a
 
   | Int a -> Int a
   | Float a -> Float a
   | Var a -> Var a
-  | Sin a -> Sin (simplify a)
-  | Cos a -> Cos (simplify a)
-  | Arctan a -> Arctan (simplify a)
 ;;
