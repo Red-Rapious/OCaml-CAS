@@ -25,11 +25,17 @@ let rec check_expression_validity = function
   | Add (a, b) -> check_expression_validity a && check_expression_validity b
   | Sub (a, b) -> check_expression_validity a && check_expression_validity b
   | Mult (a, b) -> check_expression_validity a && check_expression_validity b
-  | Fract (a, b) -> b != Int 0 && check_expression_validity a && check_expression_validity b
+  | Fract (a, b) -> if b = Int 0 
+    then (print_endline "[Error] Divide by zero" ; false)
+    else (check_expression_validity a && check_expression_validity b)
   | Power (a, _) -> check_expression_validity a
   | Exp a -> check_expression_validity a
-  | Ln (Int a) -> a > 0
-  | Ln (Float a) -> a > 0.0
+  | Ln (Int a) -> if a <= 0
+      then (print_endline "[Error] Negative or null value in Ln" ; false)
+      else true
+  | Ln (Float a) -> if a <= 0.0
+      then (print_endline "[Error] Negative or null value in Ln" ; false)
+      else true
   | Ln a -> check_expression_validity a
   | Sin a -> check_expression_validity a
   | Cos a -> check_expression_validity a
