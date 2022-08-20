@@ -138,3 +138,21 @@ let rec simplify e =
   | Float a -> Float a
   | Var a -> Var a
 ;;
+
+let rec evaluate expr var value = 
+  let expr_value = match expr with
+  | Int a -> Int a
+  | Float a -> Float a
+  | Var a -> if a = var then Float value else Var a
+  | Add (a, b) -> Add (evaluate a var value, evaluate b var value)
+  | Sub (a, b) -> Sub (evaluate a var value, evaluate b var value)
+  | Mult (a, b) -> Mult (evaluate a var value, evaluate b var value)
+  | Fract (a, b) -> Fract (evaluate a var value, evaluate b var value)
+  | Power (a, b) -> Power (evaluate a var value, b)
+  | Ln a -> Ln (evaluate a var value)
+  | Exp a -> Exp (evaluate a var value)
+  | Tan a -> Tan (evaluate a var value)
+  | Arctan a -> Arctan (evaluate a var value)
+  | Sin a -> Sin (evaluate a var value)
+  | Cos a -> Cos (evaluate a var value)
+in simplify expr_value;;
